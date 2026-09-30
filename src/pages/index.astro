@@ -1,0 +1,166 @@
+---
+import { Image } from 'astro:assets';
+import Base from '~/layouts/Base.astro';
+import MapCard from '~/components/MapCard.astro';
+import Icon from '~/components/Icon.astro';
+import { getMaps } from '~/lib/maps';
+import background from '~/assets/background.jpg';
+
+const { all, maintained } = await getMaps();
+const others = all.filter((m) => !m.data.curseforge).slice(0, 6);
+---
+
+<Base>
+  <section class="hero">
+    <Image src={background} alt="" class="hero-art" widths={[800, 1400, 2000]} sizes="100vw" loading="eager" />
+    <div class="container hero-inner">
+      <h1><span class="mine">Mine</span><span class="makers">Makers</span></h1>
+      <p class="catch">Custom Minecraft minigames and adventure maps, made by a small team of friends.</p>
+      <div class="cta">
+        <a class="btn btn-primary" href="/maps/">Browse the maps <Icon name="arrow" /></a>
+        <a class="btn btn-dark" href="/team/">Meet the team</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="section container" aria-labelledby="maintained">
+    <div class="section-head">
+      <div>
+        <p class="eyebrow">Still maintained</p>
+        <h2 id="maintained">Play on recent versions</h2>
+      </div>
+      <p>Maps we try to keep updated on CurseForge.</p>
+    </div>
+    <div class="maintained-grid">
+      {maintained.map((map) => <MapCard map={map} />)}
+    </div>
+  </section>
+
+  <section class="section" aria-labelledby="more">
+    <div class="container">
+      <div class="section-head">
+        <div>
+          <p class="eyebrow">From the archive</p>
+          <h2 id="more">More maps</h2>
+        </div>
+        <p>Older maps, available as they were originally released.</p>
+      </div>
+      <div class="grid map-grid">
+        {others.map((map) => <MapCard map={map} />)}
+      </div>
+      <a class="btn" href="/maps/">See all {all.length} maps <Icon name="arrow" /></a>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .hero {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    display: grid;
+    /* Content sits a little below the middle, leaving the screenshot visible above it. */
+    place-items: center;
+    min-height: min(62vh, 32rem);
+    padding-block: var(--space-3xl) var(--space-xl);
+    text-align: center;
+    color: #f4f5f7;
+  }
+  .hero :global(.hero-art) {
+    position: absolute;
+    inset: 0;
+    z-index: -2;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .hero::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background:
+      radial-gradient(ellipse at center, rgb(11 13 18 / 0.35), rgb(11 13 18 / 0.7)),
+      linear-gradient(to top, rgb(11 13 18 / 0.92), rgb(11 13 18 / 0.35) 55%, transparent);
+  }
+  .hero-inner {
+    display: grid;
+    justify-items: center;
+  }
+  .hero h1 {
+    font: 800 clamp(3.2rem, 2.2rem + 5.2vw, 6.25rem) / 0.95 var(--font-brand);
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    text-shadow: 0 4px 24px rgb(0 0 0 / 0.55);
+  }
+  /* 3D title: tilted towards the viewer (top wider than bottom) with a solid extruded edge,
+     like a Minecraft title logo. */
+  .hero h1 {
+    transform: perspective(30rem) rotateX(-8deg);
+    transform-origin: 50% 100%;
+    text-shadow: none;
+  }
+  .hero h1 .mine {
+    color: #f4f5f7;
+    text-shadow:
+      0 1px 0 #c9ccd3,
+      0 2px 0 #b3b7c0,
+      0 3px 0 #9ea3ad,
+      0 4px 0 #8a8f9a,
+      0 5px 0 #767b86,
+      0 6px 0 #626772,
+      0 14px 24px rgb(0 0 0 / 0.6);
+  }
+  .hero h1 .makers {
+    color: var(--brand-strong);
+    text-shadow:
+      0 1px 0 #d98a12,
+      0 2px 0 #c97e0c,
+      0 3px 0 #b87206,
+      0 4px 0 #a66700,
+      0 5px 0 #945c00,
+      0 6px 0 #825100,
+      0 14px 24px rgb(0 0 0 / 0.6);
+  }
+  .catch {
+    max-width: 40ch;
+    margin-top: var(--space-s);
+    font-size: var(--step-0);
+    line-height: 1.5;
+    color: hsl(220 15% 86%);
+    text-shadow: 0 2px 12px rgb(0 0 0 / 0.6);
+  }
+  .cta {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--space-m);
+    margin-top: var(--space-l);
+  }
+
+  .more {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4em;
+    color: var(--accent);
+    font: 600 var(--step-0) var(--font-display);
+    text-decoration: none;
+  }
+  .more:hover {
+    text-decoration: underline;
+    text-underline-offset: 4px;
+  }
+  .more :global(svg) {
+    width: 1.1em;
+  }
+
+
+  .maintained-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr));
+    gap: var(--space-l);
+  }
+  .grid {
+    margin-bottom: var(--space-xl);
+  }
+</style>

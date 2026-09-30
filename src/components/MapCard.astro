@@ -1,0 +1,144 @@
+---
+import { Image } from 'astro:assets';
+import { blurb, tagsOf, TAG_LABELS, type MapEntry } from '~/lib/maps';
+import { getMapImages } from '~/lib/files';
+
+interface Props {
+  map: MapEntry;
+  size?: 'default' | 'large' | 'compact';
+  headingLevel?: 'h2' | 'h3';
+}
+
+const { map, size = 'default', headingLevel: Heading = 'h3' } = Astro.props;
+const { title, curseforge } = map.data;
+const { thumbnail } = getMapImages(map.id);
+const tags = tagsOf(map);
+const text = blurb(map);
+---
+
+<article class:list={['map-card', `is-${size}`]} data-tags={[...tags, ...(curseforge ? ['curseforge'] : [])].join(' ')}>
+  <div class="art">
+    {size === 'large' && <Image class="art-blur" src={thumbnail} alt="" widths={[360]} sizes="360px" />}
+    <Image
+      src={thumbnail}
+      alt=""
+      widths={size === 'large' ? [640, 800] : [360, 640]}
+      sizes={size === 'large' ? '(max-width: 60rem) 100vw, 760px' : '(max-width: 48rem) 100vw, 380px'}
+    />
+  </div>
+  <div class="body">
+    <Heading class="title">
+      <a href={`/${map.id}/`}>{title}</a>
+    </Heading>
+    {size !== 'compact' && text && <p class="tagline">{text}</p>}
+    <ul class="meta" aria-label="Tags">
+      {curseforge && <li class="tag tag-maintained">On CurseForge</li>}
+      {tags.map((t) => <li class="tag">{TAG_LABELS[t]}</li>)}
+    </ul>
+  </div>
+</article>
+
+<style>
+  .map-card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-l);
+    overflow: hidden;
+    transition: border-color 0.2s ease;
+  }
+  /* Hover: a simple, slightly stronger outline. */
+  .map-card:hover,
+  .map-card:focus-within {
+    border-color: var(--text-faint);
+  }
+  .art {
+    position: relative;
+    aspect-ratio: 16 / 9;
+    background: var(--surface-2);
+    overflow: hidden;
+  }
+  .art :global(svg),
+  .art :global(img) {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .body {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+    padding: var(--space-m) var(--space-m) var(--space-l);
+    flex: 1;
+  }
+  /* Cards keep their own sizes, independent of the page type scale. */
+  .title {
+    font-size: clamp(1.2rem, 1.1rem + 0.4vw, 1.4rem);
+  }
+  .meta :global(.tag) {
+    font-size: clamp(0.83rem, 0.8rem + 0.1vw, 0.9rem);
+  }
+  .title a {
+    text-decoration: none;
+  }
+  /* Whole card is clickable via the title link. */
+  .title a::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+  }
+  .title a:focus-visible {
+    outline: none;
+  }
+  .tagline {
+    color: var(--text-muted);
+    font-size: 0.88rem;
+    line-height: 1.5;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2xs);
+    list-style: none;
+    padding: 0;
+    margin-top: auto;
+    padding-top: var(--space-xs);
+  }
+  /* Large card is taller than 16:9: show the whole thumbnail over a blurred copy of itself. */
+  .is-large .art {
+    flex: 1;
+    aspect-ratio: auto;
+    min-height: 14rem;
+  }
+  .is-large .art :global(img:not(.art-blur)) {
+    position: relative;
+    object-fit: contain;
+  }
+  .art :global(.art-blur) {
+    position: absolute;
+    inset: 0;
+    filter: blur(24px) brightness(0.7);
+    transform: scale(1.2);
+  }
+  .is-large .body {
+    flex: none;
+  }
+  .is-large .title {
+    font-size: clamp(1.45rem, 1.25rem + 0.9vw, 1.9rem);
+  }
+  .is-large .tagline {
+    font-size: var(--step-0);
+  }
+  .is-compact .body {
+    padding: var(--space-s) var(--space-m) var(--space-m);
+  }
+  .is-compact .title {
+    font-size: clamp(1rem, 0.96rem + 0.2vw, 1.1rem);
+  }
+</style>

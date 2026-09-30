@@ -1,0 +1,107 @@
+---
+/** Horizontal, swipeable row of map cards with prev/next buttons. */
+import MapCard from './MapCard.astro';
+import Icon from './Icon.astro';
+import type { MapEntry } from '~/lib/maps';
+
+interface Props {
+  title: string;
+  maps: MapEntry[];
+}
+const { title, maps } = Astro.props;
+const id = `carousel-${title.toLowerCase().replace(/\W+/g, '-')}`;
+---
+
+<section class="carousel" aria-labelledby={id}>
+  <div class="head">
+    <h2 id={id}>{title}</h2>
+    <div class="controls">
+      <button class="btn btn-sm prev" type="button" aria-label="Previous maps" disabled><Icon name="back" /></button>
+      <button class="btn btn-sm next" type="button" aria-label="Next maps"><Icon name="arrow" /></button>
+    </div>
+  </div>
+  <ul class="track" tabindex="0" aria-label={title}>
+    {
+      maps.map((map) => (
+        <li>
+          <MapCard map={map} size="compact" />
+        </li>
+      ))
+    }
+  </ul>
+</section>
+
+<script>
+  for (const root of document.querySelectorAll<HTMLElement>('.carousel')) {
+    const track = root.querySelector<HTMLElement>('.track')!;
+    const prev = root.querySelector<HTMLButtonElement>('.prev')!;
+    const next = root.querySelector<HTMLButtonElement>('.next')!;
+    const update = () => {
+      prev.disabled = track.scrollLeft <= 4;
+      next.disabled = track.scrollLeft + track.clientWidth >= track.scrollWidth - 4;
+    };
+    const step = () => track.clientWidth * 0.85;
+    prev.addEventListener('click', () => track.scrollBy({ left: -step(), behavior: 'smooth' }));
+    next.addEventListener('click', () => track.scrollBy({ left: step(), behavior: 'smooth' }));
+    track.addEventListener('scroll', update, { passive: true });
+    addEventListener('resize', update);
+    update();
+  }
+</script>
+
+<style>
+  .head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-m);
+    margin-bottom: var(--space-l);
+  }
+  h2 {
+    font-size: var(--step-2);
+  }
+  .controls {
+    display: flex;
+    gap: var(--space-xs);
+  }
+  .controls .btn {
+    padding-inline: 0.7rem;
+  }
+  .controls .btn:disabled {
+    opacity: 0.4;
+    cursor: default;
+    transform: none;
+    box-shadow: 0 3px 0 var(--btn-edge);
+  }
+  .track {
+    display: grid;
+    grid-auto-flow: column;
+    /* Same card width as the map grid: three per view on desktop. */
+    grid-auto-columns: max(min(85%, 19rem), calc((100% - 2 * var(--space-l)) / 3));
+    gap: var(--space-l);
+    padding: 0 0 var(--space-m);
+    margin: 0;
+    list-style: none;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border-strong) transparent;
+  }
+  .track > li {
+    display: flex;
+    scroll-snap-align: start;
+  }
+  .track > li > :global(*) {
+    flex: 1;
+  }
+  .track:focus-visible {
+    outline: 3px solid var(--teal);
+    outline-offset: 4px;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .track {
+      scroll-behavior: auto;
+    }
+  }
+</style>

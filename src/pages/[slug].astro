@@ -1,0 +1,420 @@
+---
+import { getEntry, render } from 'astro:content';
+import { Image, getImage } from 'astro:assets';
+import Base from '~/layouts/Base.astro';
+import MapCarousel from '~/components/MapCarousel.astro';
+import Trailer from '~/components/Trailer.astro';
+import Icon from '~/components/Icon.astro';
+import { blurb, getMaps, orderOf, tagsOf, TAG_LABELS, type MapEntry } from '~/lib/maps';
+import { getDownloads, getMapImages } from '~/lib/files';
+
+export async function getStaticPaths() {
+  const { all } = await getMaps();
+  return all.map((map) => ({ params: { slug: map.id }, props: { map } }));
+}
+
+interface Props {
+  map: MapEntry;
+}
+
+const { map } = Astro.props;
+const d = map.data;
+const { Content } = await render(map);
+const hasBody = Boolean(map.body?.trim());
+const tags = tagsOf(map);
+
+const { all } = await getMaps();
+const prequel = d.sequelOf ? await getEntry(d.sequelOf) : undefined;
+const sequel = all.find((m) => m.data.sequelOf?.id === map.id);
+const shared = (m: MapEntry) => m.data.tags.filter((t) => d.tags.includes(t)).length + Number(m.data.mode === d.mode);
+const more = all
+  .filter((m) => m.id !== map.id)
+  .sort((a, b) => shared(b) - shared(a) || orderOf(b) - orderOf(a))
+  .slice(0, 8);
+
+// Images and ZIPs come from src/assets/maps/<slug>/ (see src/lib/files.ts).
+const { thumbnail, hero, screenshots } = getMapImages(map.id);
+const downloads = getDownloads(map.id);
+const fullSize = await Promise.all(screenshots.map((src) => getImage({ src, format: 'jpg' })));
+
+---
+
+<Base title={d.title} description={blurb(map) || undefined} image={thumbnail}>
+  <article>
+    <header class="hero">
+      <Image class="hero-art" src={hero} alt="" widths={[800, 1600]} sizes="100vw" loading="eager" />
+      <div class="container hero-inner">
+        <a class="back" href="/maps/"><Icon name="back" /> All maps</a>
+        <div class="badges">
+          {d.curseforge && <span class="tag tag-maintained">On CurseForge</span>}
+          {tags.map((t) => <span class="tag">{TAG_LABELS[t]}</span>)}
+        </div>
+        <h1>{d.title}</h1>
+      </div>
+    </header>
+
+    <div class="container layout">
+      <div class="main">
+        <p class="tagline">{d.summary}</p>
+        {d.trailer && <Trailer id={d.trailer} title={d.title} />}
+        {
+          hasBody ? (
+            <div class="prose">
+              <Content />
+            </div>
+          ) : (
+            <div class="prose placeholder">
+              <p>We don't have a full description for this map yet. The screenshots and download below are all there is for now.</p>
+            </div>
+          )
+        }
+
+        {
+          (prequel || sequel) && (
+            <aside class="series">
+              <Icon name="cube" />
+              {sequel && (
+                <p>
+                  There's a sequel: <a href={`/${sequel.id}/`}>{sequel.data.title}</a>.
+                </p>
+              )}
+              {prequel && (
+                <p>
+                  Sequel to <a href={`/${prequel.id}/`}>{prequel.data.title}</a>.
+                </p>
+              )}
+            </aside>
+          )
+        }
+
+        {
+          screenshots.length > 0 && (
+            <section class="shots" aria-labelledby="shots-title">
+              <h2 id="shots-title">Screenshots</h2>
+              <div class="gallery">
+                {screenshots.map((src, i) => (
+                  <a
+                    class:list={['shot', { wide: i === 0 && screenshots.length !== 2 }]}
+                    href={fullSize[i].src}
+                    target="_blank"
+                  >
+                    <Image
+                      src={src}
+                      alt={`${d.title} screenshot ${i + 1}`}
+                      widths={i === 0 ? [400, 800] : [360, 600]}
+                      sizes={i === 0 ? '(max-width: 56rem) 100vw, 720px' : '(max-width: 30rem) 100vw, 360px'}
+                    />
+                  </a>
+                ))}
+              </div>
+            </section>
+          )
+        }
+      </div>
+
+      <aside class="side">
+        <div class="panel accent-top" aria-labelledby="download-title">
+          <h2 id="download-title">Download</h2>
+          {
+            d.curseforge && (
+              <>
+                <a class="btn btn-primary wide cf" href={d.curseforge} target="_blank" rel="noopener">
+                  <Icon name="curseforge" /> Get it on CurseForge
+                </a>
+                <p class="note">All versions are available on CurseForge.</p>
+              </>
+            )
+          }
+
+          {
+            downloads.length > 0 && (
+              <div class="downloads">
+                {d.curseforge && <h3>Older versions</h3>}
+                <ul>
+                  {downloads.map((dl, i) => (
+                    <li>
+                      <span>{dl.label}</span>
+                      <a
+                        class:list={['btn', 'btn-sm', { 'btn-primary': !d.curseforge && i === 0 }]}
+                        href={dl.href}
+                        download={dl.publicName}
+                        aria-label={`Download ${dl.label}`}
+                      >
+                        <Icon name="download" /> Download
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )
+          }
+
+          {
+            !d.curseforge && downloads.length > 0 && (
+              <p class="note">Original downloads, each made for the Minecraft version listed. This map isn't updated anymore.</p>
+            )
+          }
+
+          {
+            d.github && (
+              <a class="link" href={d.github} target="_blank" rel="noopener">
+                <Icon name="github" /> Source on GitHub <Icon name="external" class="ext" />
+              </a>
+            )
+          }
+        </div>
+      </aside>
+    </div>
+
+    {
+      more.length > 0 && (
+        <div class="container more">
+          <MapCarousel title="More maps like this" maps={more} />
+        </div>
+      )
+    }
+  </article>
+</Base>
+
+<style>
+  .hero {
+    position: relative;
+    isolation: isolate;
+    min-height: clamp(20rem, 52vh, 30rem);
+    display: grid;
+    align-items: end;
+    overflow: hidden;
+    color: #f4f5f7;
+  }
+  .hero :global(.hero-art) {
+    position: absolute;
+    inset: 0;
+    z-index: -2;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .hero::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background:
+      linear-gradient(to top, rgb(11 13 18 / 0.97) 4%, rgb(11 13 18 / 0.55) 50%, rgb(11 13 18 / 0.15)),
+      linear-gradient(to right, rgb(11 13 18 / 0.55), transparent 70%);
+  }
+  .hero-inner {
+    padding-block: var(--space-xl) var(--space-l);
+  }
+  .back {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4em;
+    margin-bottom: var(--space-l);
+    padding: 0.3rem 0.7rem 0.3rem 0.5rem;
+    border-radius: 999px;
+    background: hsl(0 0% 0% / 0.45);
+    backdrop-filter: blur(6px);
+    color: #fff;
+    font: 600 var(--step--1) var(--font-display);
+    text-decoration: none;
+  }
+  .back:hover {
+    background: hsl(0 0% 0% / 0.65);
+  }
+  .back :global(svg) {
+    width: 1em;
+  }
+  .badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-xs);
+    margin-bottom: var(--space-s);
+  }
+  /* The hero is always dark: pin tag colours to the dark palette. */
+  .hero .tag {
+    background: hsl(0 0% 100% / 0.14);
+    color: #e6e8ec;
+  }
+  .hero .tag-maintained {
+    background: var(--brand);
+    color: var(--brand-ink);
+  }
+  h1 {
+    font-size: var(--step-4);
+    text-shadow: 0 2px 20px hsl(0 0% 0% / 0.4);
+  }
+
+  .layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 20rem;
+    gap: var(--space-2xl);
+    align-items: start;
+    padding-top: var(--space-xl);
+  }
+  .main {
+    display: grid;
+    gap: var(--space-xl);
+    min-width: 0;
+  }
+  .tagline {
+    font-size: var(--step-1);
+    font-style: italic;
+  }
+  .main :global(.trailer) {
+    border-radius: var(--radius-l);
+  }
+  .placeholder {
+    padding: var(--space-l);
+    border: 2px dashed var(--border-strong);
+    border-radius: var(--radius-l);
+  }
+  .series {
+    display: flex;
+    align-items: center;
+    gap: var(--space-s);
+    padding: var(--space-m) var(--space-l);
+    border-radius: var(--radius-l);
+    background: color-mix(in oklab, var(--teal) 12%, transparent);
+    border: 1px solid color-mix(in oklab, var(--teal) 40%, transparent);
+  }
+  .series :global(svg) {
+    width: 1.5rem;
+    height: 1.5rem;
+    flex: none;
+    color: var(--teal);
+  }
+  .series a {
+    font-weight: 600;
+    color: var(--text);
+    text-underline-offset: 3px;
+  }
+  .shots h2 {
+    font-size: var(--step-2);
+    margin-bottom: var(--space-m);
+  }
+  .gallery {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-s);
+  }
+  .shot {
+    display: block;
+    overflow: hidden;
+    border-radius: var(--radius-m);
+    border: 1px solid var(--border);
+  }
+  .shot.wide,
+  .shot.wide ~ .shot:last-child:nth-child(even) {
+    grid-column: 1 / -1;
+  }
+  .shot :global(img) {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .shot {
+    transition: border-color 0.2s ease;
+  }
+  .shot:hover {
+    border-color: var(--text-faint);
+  }
+
+  .side {
+    display: grid;
+    gap: var(--space-l);
+    position: sticky;
+    top: calc(var(--header-h) + var(--space-l));
+  }
+  .panel {
+    display: grid;
+    gap: var(--space-m);
+    padding: var(--space-l);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-l);
+    overflow: hidden;
+  }
+  .panel h2,
+  .downloads h3 {
+    font: 600 var(--step--1) var(--font-display);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+  .downloads {
+    display: grid;
+    gap: var(--space-s);
+  }
+  .downloads ul {
+    display: grid;
+    list-style: none;
+    padding: 0;
+  }
+  /* One row per version: the version next to its download button. */
+  .downloads li {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-s);
+    padding-block: var(--space-s);
+    border-bottom: 1px solid var(--border);
+    font-weight: 600;
+    font-size: var(--step--1);
+  }
+  .downloads li:first-child {
+    padding-top: 0;
+  }
+  .downloads li:last-child {
+    border-bottom: 0;
+    padding-bottom: 0;
+  }
+  .downloads .btn {
+    flex: none;
+  }
+  .wide {
+    width: 100%;
+  }
+  .note {
+    color: var(--text-faint);
+    font-size: var(--step--1);
+    line-height: 1.5;
+  }
+  .link {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    padding-top: var(--space-s);
+    border-top: 1px solid var(--border);
+    color: var(--text-muted);
+    font-size: var(--step--1);
+    font-weight: 500;
+    text-decoration: none;
+  }
+  .link:hover {
+    color: var(--text);
+  }
+  .link :global(svg) {
+    width: 1.05rem;
+    height: 1.05rem;
+  }
+  .link :global(.ext) {
+    width: 0.85rem;
+    margin-left: auto;
+    opacity: 0.6;
+  }
+
+  .more {
+    margin-top: var(--space-3xl);
+  }
+
+  @media (max-width: 56rem) {
+    .layout {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    .side {
+      position: static;
+      order: -1;
+    }
+  }
+</style>

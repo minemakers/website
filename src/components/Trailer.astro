@@ -1,0 +1,89 @@
+---
+/** Click-to-load YouTube player: shows the thumbnail, loads the iframe only on click. */
+interface Props {
+  id: string;
+  title: string;
+}
+const { id, title } = Astro.props;
+---
+
+<div class="trailer" data-id={id} data-title={title}>
+  <button type="button" aria-label={`Play trailer: ${title}`}>
+    <img src={`https://i.ytimg.com/vi/${id}/hqdefault.jpg`} alt="" loading="lazy" width="480" height="360" />
+    <span class="play" aria-hidden="true"></span>
+  </button>
+</div>
+
+<script>
+  for (const el of document.querySelectorAll<HTMLElement>('.trailer')) {
+    el.querySelector('button')?.addEventListener('click', () => {
+      const iframe = document.createElement('iframe');
+      iframe.src = `https://www.youtube-nocookie.com/embed/${el.dataset.id}?autoplay=1`;
+      iframe.title = `${el.dataset.title} trailer`;
+      iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture';
+      iframe.allowFullscreen = true;
+      el.replaceChildren(iframe);
+    });
+  }
+</script>
+
+<style>
+  .trailer {
+    position: relative;
+    aspect-ratio: 16 / 9;
+    overflow: hidden;
+    background: #000;
+  }
+  button {
+    all: unset;
+    display: block;
+    width: 100%;
+    height: 100%;
+    cursor: pointer;
+  }
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0.85;
+    transition: opacity 0.3s;
+  }
+  button:hover img {
+    opacity: 1;
+  }
+  button:focus-visible {
+    outline: 3px solid var(--teal);
+    outline-offset: -3px;
+  }
+  .play {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 4.5rem;
+    height: 4.5rem;
+    translate: -50% -50%;
+    border: 4px solid #fff;
+    border-radius: 50%;
+    background: rgb(0 0 0 / 0.45);
+    box-shadow: 0 0 20px rgb(0 0 0 / 0.5);
+    transition: transform 0.2s;
+  }
+  .play::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 54%;
+    translate: -50% -50%;
+    border-style: solid;
+    border-width: 0.8rem 0 0.8rem 1.35rem;
+    border-color: transparent transparent transparent #fff;
+  }
+  button:hover .play {
+    background: rgb(0 0 0 / 0.65);
+  }
+  .trailer :global(iframe) {
+    width: 100%;
+    height: 100%;
+    border: 0;
+  }
+</style>

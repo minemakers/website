@@ -1,0 +1,108 @@
+---
+import Base from '~/layouts/Base.astro';
+import MapCard from '~/components/MapCard.astro';
+import { getMaps, tagsOf, TAG_LABELS } from '~/lib/maps';
+
+const { all } = await getMaps();
+const used = new Set(all.flatMap(tagsOf));
+const filters = Object.keys(TAG_LABELS).filter((t) => used.has(t));
+---
+
+<Base title="Maps" description="All the MineMakers maps: minigames, PvP arenas, puzzles and horror adventures, with downloads.">
+  <header class="page-head container">
+    <p class="eyebrow">{all.length} maps</p>
+    <h1>All the maps</h1>
+    <p>
+      All our maps. We're still trying to keep the ones marked <strong class="cf">On&nbsp;CurseForge</strong> up to date. The others
+      are available as they were originally released.
+    </p>
+  </header>
+
+  <div class="container">
+    <div class="filters" role="group" aria-label="Filter maps" hidden>
+      <button class="btn btn-sm" type="button" aria-pressed="true" data-tag="all">All</button>
+      <button class="btn btn-sm" type="button" aria-pressed="false" data-tag="curseforge">On CurseForge</button>
+      {
+        filters.map((t) => (
+          <button class="btn btn-sm" type="button" aria-pressed="false" data-tag={t}>
+            {TAG_LABELS[t]}
+          </button>
+        ))
+      }
+    </div>
+
+    <div class="grid map-grid">
+      {all.map((map) => <MapCard map={map} />)}
+    </div>
+
+    <p class="empty" hidden>No maps here yet.</p>
+  </div>
+</Base>
+
+<script>
+  const bar = document.querySelector<HTMLElement>('.filters');
+  if (bar) {
+    bar.hidden = false;
+    const buttons = [...bar.querySelectorAll<HTMLButtonElement>('button')];
+    const cards = [...document.querySelectorAll<HTMLElement>('.map-card')];
+    const empty = document.querySelector<HTMLElement>('.empty')!;
+
+    const apply = (tag: string) => {
+      buttons.forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.tag === tag)));
+      cards.forEach((c) => {
+        c.hidden = tag !== 'all' && !(c.dataset.tags ?? '').split(' ').includes(tag);
+      });
+      empty.hidden = cards.some((c) => !c.hidden);
+    };
+
+    bar.addEventListener('click', (e) => {
+      const button = (e.target as Element).closest('button');
+      if (button?.dataset.tag) apply(button.dataset.tag);
+    });
+  }
+</script>
+
+<style>
+  .page-head {
+    padding-block: var(--space-2xl) var(--space-l);
+  }
+  .page-head h1 {
+    font-size: var(--step-4);
+    margin-block: var(--space-2xs) var(--space-s);
+  }
+  .page-head .cf {
+    color: var(--accent);
+  }
+  .page-head p:not(.eyebrow) {
+    color: var(--text-muted);
+    font-size: var(--step-1);
+    max-width: 58ch;
+  }
+  .filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-xs);
+    padding-block: var(--space-s) var(--space-m);
+    margin-bottom: var(--space-l);
+    position: sticky;
+    top: var(--header-h);
+    z-index: 10;
+    background: var(--bg);
+  }
+  .filters[hidden] {
+    display: none;
+  }
+  .filters button[aria-pressed='true'] {
+    --btn-bg: var(--brand);
+    --btn-fg: var(--brand-ink);
+    --btn-edge: var(--brand-edge);
+  }
+  .grid > :global([hidden]) {
+    display: none;
+  }
+  .empty {
+    color: var(--text-muted);
+    padding-block: var(--space-2xl);
+    text-align: center;
+  }
+</style>

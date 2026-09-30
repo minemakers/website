@@ -1,0 +1,324 @@
+/* ------------------------------------------------------------------
+   MineMakers design tokens
+   Brand colours from the original minemakers.net: nav black #0b0d12,
+   orange #de9000 for surfaces, deeper orange for text, teal #368b9c (team).
+   Dark only.
+   --brand is the orange used for surfaces (buttons, bars) in both themes;
+   --accent is the orange used for text, tuned for contrast on the dark background.
+   ------------------------------------------------------------------ */
+:root {
+  color-scheme: dark;
+  --bg: #0b0d12;
+  --bg-raised: #11141b;
+  --surface: #161a22;
+  --surface-2: #1e232d;
+  --border: #2a303c;
+  --border-strong: #3b4351;
+  --text: #f0f0f2;
+  --text-muted: #a9aeb8;
+  --text-faint: #7f8591;
+  --brand: #de9000;
+  --brand-strong: #eb9a1c;
+  --brand-edge: #955f00;
+  --brand-ink: #1a1000;
+  --accent: #e9981a;
+  --teal: #5bb8cb;
+  --teal-bg: #368b9c;
+  --teal-ink: #061a1f;
+  --shadow-color: 0 0% 0%;
+
+  --font-display: 'Space Grotesk Variable', ui-sans-serif, system-ui, sans-serif;
+  --font-body: 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
+  --font-brand: 'Barlow Condensed', var(--font-display);
+
+  --step--1: clamp(0.8rem, 0.78rem + 0.08vw, 0.86rem);
+  --step-0: clamp(0.94rem, 0.9rem + 0.15vw, 1rem);
+  --step-1: clamp(1.1rem, 1.02rem + 0.3vw, 1.25rem);
+  --step-2: clamp(1.35rem, 1.2rem + 0.7vw, 1.7rem);
+  --step-3: clamp(1.65rem, 1.35rem + 1.4vw, 2.4rem);
+  --step-4: clamp(2.1rem, 1.5rem + 2.6vw, 3.6rem);
+
+  --space-2xs: 0.25rem;
+  --space-xs: 0.5rem;
+  --space-s: 0.75rem;
+  --space-m: 1rem;
+  --space-l: 1.5rem;
+  --space-xl: 2.5rem;
+  --space-2xl: 4rem;
+  --space-3xl: 6rem;
+
+  --radius-s: 4px;
+  --radius-m: 8px;
+  --radius-l: 14px;
+  --container: 72rem;
+  --gutter: clamp(1rem, 4vw, 2rem);
+  --header-h: 3.5rem;
+}
+
+
+/* ------------------------------------------------------------------ Base */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+* {
+  margin: 0;
+}
+html {
+  -webkit-text-size-adjust: 100%;
+  scroll-padding-top: calc(var(--header-h) + 1rem);
+}
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
+}
+body {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: var(--step-0);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+main {
+  flex: 1;
+}
+img,
+svg,
+video {
+  display: block;
+  max-width: 100%;
+}
+img {
+  height: auto;
+}
+h1,
+h2,
+h3,
+h4 {
+  font-family: var(--font-display);
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+}
+p {
+  text-wrap: pretty;
+}
+a {
+  color: inherit;
+}
+:focus-visible {
+  outline: 3px solid var(--teal);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+::selection {
+  background: var(--brand);
+  color: var(--brand-ink);
+}
+
+/* ------------------------------------------------------------------ Utilities */
+.container {
+  width: min(100% - 2 * var(--gutter), var(--container));
+  margin-inline: auto;
+}
+.visually-hidden {
+  position: absolute !important;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+.eyebrow {
+  font: 600 var(--step--1) var(--font-display);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+.section {
+  padding-block: var(--space-2xl);
+}
+.section-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  justify-content: space-between;
+  gap: var(--space-m);
+  margin-bottom: var(--space-l);
+}
+.section-head h2 {
+  font-size: var(--step-3);
+  margin-top: var(--space-2xs);
+}
+.section-head p {
+  color: var(--text-muted);
+  max-width: 46ch;
+}
+
+/* ------------------------------------------------------------------ Map grid
+   Cards at least ~19rem wide, never more than 3 per row. */
+.map-grid {
+  --cols: 3;
+  --gap: var(--space-l);
+  display: grid;
+  grid-template-columns: repeat(
+    auto-fill,
+    minmax(max(min(100%, 19rem), calc((100% - (var(--cols) - 1) * var(--gap)) / var(--cols))), 1fr)
+  );
+  gap: var(--gap);
+}
+
+/* ------------------------------------------------------------------ Buttons
+   "Block" buttons: flat face + hard bottom edge that presses down on click. */
+.btn {
+  --btn-bg: var(--surface-2);
+  --btn-fg: var(--text);
+  --btn-edge: var(--border-strong);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.55em;
+  min-height: 2.9rem;
+  padding: 0.6rem 1.2rem;
+  border: 0;
+  border-radius: var(--radius-m);
+  background: var(--btn-bg);
+  color: var(--btn-fg);
+  box-shadow: 0 4px 0 var(--btn-edge);
+  font: 600 var(--step-0) / 1 var(--font-display);
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    transform 0.08s ease,
+    box-shadow 0.08s ease,
+    background-color 0.15s ease;
+}
+/* Hover presses the block halfway down and darkens it slightly; click presses it fully. */
+.btn:hover {
+  transform: translateY(2px);
+  box-shadow: 0 2px 0 var(--btn-edge);
+  background: color-mix(in oklab, var(--btn-bg) 90%, black);
+}
+.btn:active {
+  transform: translateY(4px);
+  box-shadow: 0 0 0 var(--btn-edge);
+}
+.btn svg {
+  width: 1.15em;
+  height: 1.15em;
+  flex: none;
+}
+.btn-primary {
+  --btn-bg: var(--brand);
+  --btn-fg: var(--brand-ink);
+  --btn-edge: var(--brand-edge);
+}
+.btn-dark {
+  --btn-bg: #1c212b;
+  --btn-fg: #fff;
+  --btn-edge: #000;
+}
+.btn-sm {
+  min-height: 2.35rem;
+  padding: 0.45rem 0.9rem;
+  font-size: var(--step--1);
+  box-shadow: 0 3px 0 var(--btn-edge);
+}
+.btn-sm:hover {
+  transform: translateY(1px);
+  box-shadow: 0 2px 0 var(--btn-edge);
+}
+.btn-sm:active {
+  transform: translateY(3px);
+  box-shadow: 0 0 0 var(--btn-edge);
+}
+.btn[aria-disabled='true'] {
+  opacity: 0.55;
+  pointer-events: none;
+  box-shadow: none;
+}
+
+/* ------------------------------------------------------------------ Accent edge
+   A static orange bar on the top edge of a surface (e.g. the download panel).
+   Hoverable cards just get a slightly stronger neutral outline. */
+.accent-top {
+  position: relative;
+}
+.accent-top::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto;
+  z-index: 2;
+  height: 3px;
+  background: var(--brand);
+  pointer-events: none;
+}
+
+/* ------------------------------------------------------------------ Tags */
+.tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35em;
+  padding: 0.2em 0.6em;
+  border-radius: var(--radius-s);
+  background: var(--surface-2);
+  color: var(--text-muted);
+  font-size: var(--step--1);
+  font-weight: 500;
+  line-height: 1.5;
+  white-space: nowrap;
+}
+.tag-version {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  background: color-mix(in oklab, var(--accent) 16%, transparent);
+  color: var(--accent);
+}
+.tag-maintained {
+  background: var(--brand);
+  color: var(--brand-ink);
+  font-weight: 600;
+}
+
+/* ------------------------------------------------------------------ Prose */
+.prose {
+  color: var(--text-muted);
+  font-size: var(--step-0);
+  line-height: 1.7;
+}
+.prose > * + * {
+  margin-top: 1em;
+}
+.prose h2,
+.prose h3 {
+  color: var(--text);
+  margin-top: 1.6em;
+}
+.prose strong {
+  color: var(--text);
+}
+.prose blockquote {
+  padding-left: var(--space-m);
+  border-left: 3px solid var(--border-strong);
+  color: var(--text);
+  font-style: italic;
+}
+.prose a {
+  color: var(--accent);
+  text-underline-offset: 3px;
+}
+.prose ul,
+.prose ol {
+  padding-left: 1.3em;
+}

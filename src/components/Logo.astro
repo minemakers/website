@@ -1,0 +1,13 @@
+---
+/** The original MineMakers logo (logo.jpg from the old site), shown as-is. */
+import { Image } from 'astro:assets';
+import logo from '~/assets/logo.jpg';
+
+interface Props {
+  class?: string;
+  loading?: 'eager' | 'lazy';
+}
+const { class: className, loading = 'eager' } = Astro.props;
+---
+
+<Image src={logo} alt="" class={className} width={111} height={111} loading={loading} />

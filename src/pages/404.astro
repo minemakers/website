@@ -1,0 +1,59 @@
+---
+import Base from '~/layouts/Base.astro';
+import Logo from '~/components/Logo.astro';
+import Icon from '~/components/Icon.astro';
+---
+
+<Base title="Page not found">
+  <section class="container lost">
+    <Logo class="art" />
+    <p class="eyebrow">Error 404</p>
+    <h1>You fell into the void.</h1>
+    <p>This page doesn't exist, or it moved when we rebuilt the site.</p>
+    <div class="cta">
+      <a class="btn btn-primary" href="/maps/">Browse the maps <Icon name="arrow" /></a>
+      <a class="btn" href="/">Respawn at home</a>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .lost {
+    display: grid;
+    justify-items: center;
+    text-align: center;
+    padding-block: var(--space-2xl);
+  }
+  .lost :global(.art) {
+    width: 6rem;
+    height: 6rem;
+    margin: var(--space-l) 0 var(--space-2xl);
+    transform: rotate(45deg);
+    filter: drop-shadow(0 10px 14px rgb(0 0 0 / 0.45));
+    animation: fall 3s ease-in-out infinite alternate;
+  }
+  @keyframes fall {
+    to {
+      transform: rotate(225deg) translateY(-6px);
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .lost :global(.art) {
+      animation: none;
+    }
+  }
+  h1 {
+    font-size: var(--step-3);
+    margin-block: var(--space-2xs) var(--space-s);
+  }
+  p:not(.eyebrow) {
+    color: var(--text-muted);
+  }
+  .cta {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--space-s);
+    margin-top: var(--space-l);
+  }
+</style>
