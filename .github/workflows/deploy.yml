@@ -31,10 +31,8 @@ jobs:
         with:
           path: dist
 
-  # Manual for now: deploy from the Actions tab once GitHub Pages and the DNS are set up.
-  # To deploy automatically on every push to master, change this to: github.event_name == 'push'
   deploy:
-    if: github.event_name == 'workflow_dispatch'
+    if: github.event_name == 'push'
     needs: build
     runs-on: ubuntu-latest
     environment:
